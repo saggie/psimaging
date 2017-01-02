@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -7,17 +8,34 @@ namespace PSImaging
 {
     public class Pixel
     {
-        public byte a;
-        public byte r;
-        public byte g;
-        public byte b;
+        public byte A { get; private set; }
+        public byte R { get; private set; }
+        public byte G { get; private set; }
+        public byte B { get; private set; }
 
         public Pixel(byte b, byte g, byte r, byte a)
         {
-            this.a = a;
-            this.r = r;
-            this.g = g;
-            this.b = b;
+            this.A = a;
+            this.R = r;
+            this.G = g;
+            this.B = b;
+        }
+
+        public Pixel(string colorString)
+        {
+            // assume 'RRGGBB'
+            var strR = colorString.Substring(colorString.Length - 6, 2);
+            var strG = colorString.Substring(colorString.Length - 4, 2);
+            var strB = colorString.Substring(colorString.Length - 2, 2);
+            this.A = 0xFF;
+            this.R = (byte) int.Parse(strR, System.Globalization.NumberStyles.HexNumber);
+            this.G = (byte) int.Parse(strG, System.Globalization.NumberStyles.HexNumber);
+            this.B = (byte) int.Parse(strB, System.Globalization.NumberStyles.HexNumber);
+        }
+
+        public bool HasSameRgb(Pixel other)
+        {
+            return this.R == other.R && this.G == other.G && this.B == other.B;
         }
     }
 
@@ -39,6 +57,12 @@ namespace PSImaging
             this.pixels = pixels;
             this.width = width;
             this.height = height;
+        }
+
+        public PixelsData Copy()
+        {
+            byte[] copiedPixels = PixelUtil.Copy(this.pixels);
+            return new PixelsData(copiedPixels, this.width, this.height);
         }
 
         public IList<Pixel> GetNeighborPixels(int x, int y, int distance)
@@ -78,6 +102,13 @@ namespace PSImaging
 
     public static class PixelUtil
     {
+        public static byte[] Copy(byte[] source)
+        {
+            var ret = new byte[source.Length];
+            Buffer.BlockCopy(source, 0, ret, 0, source.Length * sizeof(byte));
+            return ret;
+        }
+
         public static int GetXPosition(int index, int width)
         {
             return index / 4 % width;

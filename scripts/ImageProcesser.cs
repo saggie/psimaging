@@ -82,15 +82,47 @@ namespace PSImaging
                 for (var xi = 0; xi < ret.width; xi++)
                 {
                     var neighborPixels = source.GetNeighborPixels(xi, yi, distance);
-                    var medianPixel = neighborPixels.OrderBy(pixel => pixel.r + pixel.g + pixel.b)
+                    var medianPixel = neighborPixels.OrderBy(pixel => pixel.A + pixel.G + pixel.B)
                                                     .ElementAt(neighborPixels.Count / 2);
-                    ret.pixels[ret.GetIndex(xi, yi) + 0] = medianPixel.b;
-                    ret.pixels[ret.GetIndex(xi, yi) + 1] = medianPixel.g;
-                    ret.pixels[ret.GetIndex(xi, yi) + 2] = medianPixel.r;
+                    ret.pixels[ret.GetIndex(xi, yi) + 0] = medianPixel.B;
+                    ret.pixels[ret.GetIndex(xi, yi) + 1] = medianPixel.G;
+                    ret.pixels[ret.GetIndex(xi, yi) + 2] = medianPixel.R;
                     ret.pixels[ret.GetIndex(xi, yi) + 3] = 0xFF; // ignore alpha channel for this filter
                 }
             }
             return ret;
+        }
+    }
+
+    public class ColorReplacer : ImageProcesser
+    {
+        private Pixel pixelFrom;
+        private Pixel pixelTo;
+
+        public override PixelsData Process(PixelsData source)
+        {
+            var ret = source.Copy();
+            for (var i = 0; i < ret.pixels.Length; i += 4)
+            {
+                var drawingPixel = new Pixel(source.pixels[i + 0],
+                                             source.pixels[i + 1],
+                                             source.pixels[i + 2],
+                                             source.pixels[i + 3]);
+                if (drawingPixel.HasSameRgb(pixelFrom))
+                {
+                    ret.pixels[i + 0] = pixelTo.B;
+                    ret.pixels[i + 1] = pixelTo.G;
+                    ret.pixels[i + 2] = pixelTo.R;
+                    ret.pixels[i + 3] = source.pixels[i + 3]; // keep the alpha value as-is
+                }
+            }
+            return ret;
+        }
+
+        public void SetColorsToReplace(string from, string to)
+        {
+            this.pixelFrom = new Pixel(from);
+            this.pixelTo = new Pixel(to);
         }
     }
 }

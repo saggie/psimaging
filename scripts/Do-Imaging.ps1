@@ -9,7 +9,11 @@ param (
 
     [Parameter(Mandatory = $false)]
     [PSObject]
-    $Option1
+    $Option1,
+
+    [Parameter(Mandatory = $false)]
+    [PSObject]
+    $Option2
 )
 
 # load C# files
@@ -45,6 +49,10 @@ switch ($ProcessingType)
     'Apply-MedianFilter' {
         $imageProcesser = New-Object PSImaging.MedianFilter
         $imageProcesser.distance = [Int32]$Option1
+    }
+    'Replace-Color' {
+        $imageProcesser = New-Object PSImaging.ColorReplacer
+        $imageProcesser.SetColorsToReplace([string]$Option1, [string]$Option2)
     }
     default { exit 0 }
 }
