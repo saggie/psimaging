@@ -54,6 +54,11 @@ switch ($ProcessingType)
         $imageProcesser = New-Object PSImaging.ColorReplacer
         $imageProcesser.SetColorsToReplace([string]$Option1, [string]$Option2)
     }
+    'Cleanup-Color' {
+        $imageProcesser = New-Object PSImaging.ColorCleaner
+        $imageProcesser.SetAllowedColor([string]$Option1)
+        $imageProcesser.SetResultColor([string]$Option2)
+    }
     default { exit 0 }
 }
 $newPixels = $imageProcesser.Process($sourcePixels)

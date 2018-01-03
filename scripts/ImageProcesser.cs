@@ -113,7 +113,7 @@ namespace PSImaging
                     ret.pixels[i + 0] = pixelTo.B;
                     ret.pixels[i + 1] = pixelTo.G;
                     ret.pixels[i + 2] = pixelTo.R;
-                    ret.pixels[i + 3] = source.pixels[i + 3]; // keep the alpha value as-is
+                    ret.pixels[i + 3] = drawingPixel.A; // keep the alpha value as-is
                 }
             }
             return ret;
@@ -123,6 +123,42 @@ namespace PSImaging
         {
             this.pixelFrom = new Pixel(from);
             this.pixelTo = new Pixel(to);
+        }
+    }
+
+    public class ColorCleaner : ImageProcesser
+    {
+        private Pixel allowedColor;
+        private Pixel resultColor;
+
+        public override PixelsData Process(PixelsData source)
+        {
+            var ret = source.Copy();
+            for (var i = 0; i < ret.pixels.Length; i += 4)
+            {
+                var drawingPixel = new Pixel(source.pixels[i + 0],
+                                             source.pixels[i + 1],
+                                             source.pixels[i + 2],
+                                             source.pixels[i + 3]);
+                if (!drawingPixel.HasSameRgb(allowedColor))
+                {
+                    ret.pixels[i + 0] = resultColor.B;
+                    ret.pixels[i + 1] = resultColor.G;
+                    ret.pixels[i + 2] = resultColor.R;
+                    ret.pixels[i + 3] = drawingPixel.A; // keep the alpha value as-is
+                }
+            }
+            return ret;
+        }
+
+        public void SetAllowedColor(string allowedColor)
+        {
+            this.allowedColor = new Pixel(allowedColor);
+        }
+
+        public void SetResultColor(string resultColor)
+        {
+            this.resultColor = new Pixel(resultColor);
         }
     }
 }
