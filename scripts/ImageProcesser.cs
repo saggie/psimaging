@@ -94,6 +94,126 @@ namespace PSImaging
         }
     }
 
+    public class EdgeDrawer : ImageProcesser
+    {
+        private const bool X = true;
+        private const bool _ = false;
+
+        private bool[][][] masks = new bool[][][]
+        {
+            // level 0
+            new bool[][]
+            {
+                new bool[] {_, X, _},
+                new bool[] {X, X, X},
+                new bool[] {_, X, _}
+            },
+            // level 1
+            new bool[][]
+            {
+                new bool[] {X, X, X},
+                new bool[] {X, X, X},
+                new bool[] {X, X, X}
+            },
+            // level 2
+            new bool[][]
+            {
+                new bool[] {_, _, X, _, _},
+                new bool[] {_, X, X, X, _},
+                new bool[] {X, X, X, X, X},
+                new bool[] {_, X, X, X, _},
+                new bool[] {_, _, X, _, _}
+            },
+            // level 3
+            new bool[][]
+            {
+                new bool[] {_, X, X, X, _},
+                new bool[] {X, X, X, X, X},
+                new bool[] {X, X, X, X, X},
+                new bool[] {X, X, X, X, X},
+                new bool[] {_, X, X, X, _}
+            },
+            // level 4
+            new bool[][]
+            {
+                new bool[] {X, X, X, X, X},
+                new bool[] {X, X, X, X, X},
+                new bool[] {X, X, X, X, X},
+                new bool[] {X, X, X, X, X},
+                new bool[] {X, X, X, X, X}
+            },
+        };
+
+        private int level = 0;
+        private Pixel drawingColor = new Pixel("000000");
+        private Pixel backGroundColor = new Pixel("FFFFFF");
+
+        public override PixelsData Process(PixelsData source)
+        {
+            var ret = source.Copy();
+            for (var yi = 0; yi < ret.height; yi++)
+            {
+                for (var xi = 0; xi < ret.width; xi++)
+                {
+                    if (source.GetPixel(xi, yi).Equals(backGroundColor))
+                    {
+                        continue;
+                    }
+
+                    for (var vi = 0; vi < masks[level].Length; vi++)
+                    {
+                        for (var ui = 0; ui < masks[level][0].Length; ui++)
+                        {
+                            if (!masks[level][vi][ui]) {
+                                continue;
+                            }
+
+                            var cursorX = getCursorPositionX(xi, ui);
+                            var cursorY = getCursorPositionY(yi, vi);
+                            if (!source.IsInBounds(cursorX, cursorY)
+                                || source.GetPixel(cursorX, cursorY).NotEquals(backGroundColor))
+                            {
+                                continue;
+                            }
+
+                            ret.pixels[ret.GetIndex(cursorX, cursorY) + 0] = drawingColor.B;
+                            ret.pixels[ret.GetIndex(cursorX, cursorY) + 1] = drawingColor.G;
+                            ret.pixels[ret.GetIndex(cursorX, cursorY) + 2] = drawingColor.R;
+                            ret.pixels[ret.GetIndex(cursorX, cursorY) + 3] = 0xFF; // ignore alpha channel for this filter
+                        }
+                    }
+                }
+            }
+            return ret;
+        }
+
+        public void SetLevel(int level)
+        {
+            this.level = level;
+        }
+
+        public void SetDrawingColor(string drawingColor)
+        {
+            this.drawingColor = new Pixel(drawingColor);
+
+        }
+
+        public void SetBackGroundColor(string backGroundColor)
+        {
+            this.backGroundColor = new Pixel(backGroundColor);
+        }
+
+        private int getCursorPositionX(int xi, int ui)
+        {
+            return xi + ui - masks[level][0].Length / 2;
+        }
+
+        private int getCursorPositionY(int yi, int vi)
+        {
+            return yi + vi - masks[level].Length / 2;
+        }
+    }
+
     public class ColorReplacer : ImageProcesser
     {
         private Pixel pixelFrom;
@@ -108,7 +228,7 @@ namespace PSImaging
                                              source.pixels[i + 1],
                                              source.pixels[i + 2],
                                              source.pixels[i + 3]);
-                if (drawingPixel.HasSameRgb(pixelFrom))
+                if (drawingPixel.Equals(pixelFrom))
                 {
                     ret.pixels[i + 0] = pixelTo.B;
                     ret.pixels[i + 1] = pixelTo.G;
@@ -140,7 +260,7 @@ namespace PSImaging
                                              source.pixels[i + 1],
                                              source.pixels[i + 2],
                                              source.pixels[i + 3]);
-                if (!drawingPixel.HasSameRgb(allowedColor))
+                if (!drawingPixel.Equals(allowedColor))
                 {
                     ret.pixels[i + 0] = resultColor.B;
                     ret.pixels[i + 1] = resultColor.G;

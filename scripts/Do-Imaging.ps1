@@ -13,30 +13,34 @@ param (
 
     [Parameter(Mandatory = $false)]
     [PSObject]
-    $Option2
+    $Option2,
+
+    [Parameter(Mandatory = $false)]
+    [PSObject]
+    $Option3
 )
 
-# load C# files
+# Load C# files
 $thisDirectoryPath = Split-Path $MyInvocation.MyCommand.Path -Parent
 Add-Type -Path (Join-Path $thisDirectoryPath 'ImagingCore.cs'), `
                (Join-Path $thisDirectoryPath 'ImageProcesser.cs') `
          -ReferencedAssemblies System.Drawing
 
-# resolve file path
+# Resolve the file path
 $resolvedFilePath = Resolve-Path $SourceImageFilePath
 
-# get image information
+# Load an image from the file
 Add-Type -AssemblyName System.Drawing
 $sourceImage = [System.Drawing.Image]::FromFile($resolvedFilePath)
 
-# convert image to pixels
+# Convert image to pixels
 $sourcePixels = [PSImaging.BitmapConverter]::ConvertBitmapToPixels($sourceImage)
 if ($sourceImage -ne $null)
 {
     $sourceImage.Dispose()
 }
 
-# process image
+# Process image
 switch ($ProcessingType)
 {
     'ConvertTo-Grayscale' {
@@ -49,6 +53,12 @@ switch ($ProcessingType)
     'Apply-MedianFilter' {
         $imageProcesser = New-Object PSImaging.MedianFilter
         $imageProcesser.distance = [Int32]$Option1
+    }
+    'Draw-Edge' {
+        $imageProcesser = New-Object PSImaging.EdgeDrawer
+        $imageProcesser.SetLevel([Int32]$Option1)
+        $imageProcesser.SetDrawingColor([string]$Option2)
+        $imageProcesser.SetBackGroundColor([string]$Option3)
     }
     'Replace-Color' {
         $imageProcesser = New-Object PSImaging.ColorReplacer
@@ -63,10 +73,10 @@ switch ($ProcessingType)
 }
 $newPixels = $imageProcesser.Process($sourcePixels)
 
-# deconvert image
+# Deconvert image
 $outputImage = [PSImaging.BitmapConverter]::ConvertPixelsToBitmap($newPixels)
 
-# save processed image
+# Save processed image
 $outputFileLocation = Split-Path $resolvedFilePath -Parent
 $timestamp = (Get-Date).ToString("_yyyyMMdd_HHmmss")
 $outputFileBaseName = (Get-ChildItem $resolvedFilePath).BaseName + $timestamp
@@ -75,3 +85,5 @@ $outputFileFullName = $outputFileBaseName + $outputFileExtention
 $outputFilePath = Join-Path $outputFileLocation $outputFileFullName
 $outputImageFormat = [PSImaging.ImageFormatResolver]::ResolveFromExtension($outputFileExtention)
 $outputImage.Save($outputFilePath, $outputImageFormat)
+
+return $outputFilePath

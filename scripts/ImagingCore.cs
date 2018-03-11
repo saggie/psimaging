@@ -33,9 +33,14 @@ namespace PSImaging
             this.B = (byte) int.Parse(strB, System.Globalization.NumberStyles.HexNumber);
         }
 
-        public bool HasSameRgb(Pixel other)
+        public bool Equals(Pixel other)
         {
             return this.R == other.R && this.G == other.G && this.B == other.B;
+        }
+        
+        public bool NotEquals(Pixel other)
+        {
+            return !Equals(other);
         }
     }
 
@@ -86,12 +91,12 @@ namespace PSImaging
             return (x + y * width) * 4;
         }
 
-        private bool IsInBounds(int x, int y)
+        public bool IsInBounds(int x, int y)
         {
             return x >= 0 && x < width && y >= 0 && y < height;
         }
 
-        private Pixel GetPixel(int x, int y)
+        public Pixel GetPixel(int x, int y)
         {
             return new Pixel(pixels[GetIndex(x, y) + 0],
                              pixels[GetIndex(x, y) + 1],
