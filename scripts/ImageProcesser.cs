@@ -214,6 +214,166 @@ namespace PSImaging
         }
     }
 
+    public class FrameDrawer : ImageProcesser
+    {
+        private Pixel horizontalColor = new Pixel("FF0000");
+        private Pixel verticalColor = new Pixel("0000FF");
+        private Pixel borderColor = new Pixel("000000");
+        private Pixel frameColor = new Pixel("FFFF00");
+        private Pixel backGroundColor = new Pixel("FFFFFF");
+
+        public override PixelsData Process(PixelsData source)
+        {
+            var ret = new PixelsData(source.width, source.height);
+
+            // Initialize
+            for (var yi = 0; yi < ret.height; yi++)
+            {
+                for (var xi = 0; xi < ret.width; xi++)
+                {
+                    ret.pixels[ret.GetIndex(xi, yi) + 0] = backGroundColor.B;
+                    ret.pixels[ret.GetIndex(xi, yi) + 1] = backGroundColor.G;
+                    ret.pixels[ret.GetIndex(xi, yi) + 2] = backGroundColor.R;
+                    ret.pixels[ret.GetIndex(xi, yi) + 3] = 0xFF; // ignore alpha channel for this filter
+                }
+            }
+
+            for (var yi = 0; yi < ret.height; yi++)
+            {
+                for (var xi = 0; xi < ret.width; xi++)
+                {
+                    if (source.GetPixel(xi, yi).Equals(horizontalColor))
+                    {
+                        // upper border
+                        for (var vi = -10; vi <= -8; vi++)
+                        {
+                            var cursorY = yi + vi;
+
+                            if (cursorY < 0 || ret.GetPixel(xi, cursorY).Equals(frameColor))
+                            {
+                                continue;
+                            }
+
+                            ret.pixels[ret.GetIndex(xi, cursorY) + 0] = borderColor.B;
+                            ret.pixels[ret.GetIndex(xi, cursorY) + 1] = borderColor.G;
+                            ret.pixels[ret.GetIndex(xi, cursorY) + 2] = borderColor.R;
+                            ret.pixels[ret.GetIndex(xi, cursorY) + 3] = 0xFF;
+                        }
+
+                        // within the border
+                        for (var vi = -7; vi <= 7; vi++)
+                        {
+                            var cursorY = yi + vi;
+
+                            if (cursorY < 0 || cursorY >= source.height)
+                            {
+                                continue;
+                            }
+
+                            ret.pixels[ret.GetIndex(xi, cursorY) + 0] = frameColor.B;
+                            ret.pixels[ret.GetIndex(xi, cursorY) + 1] = frameColor.G;
+                            ret.pixels[ret.GetIndex(xi, cursorY) + 2] = frameColor.R;
+                            ret.pixels[ret.GetIndex(xi, cursorY) + 3] = 0xFF;
+                        }
+
+                        // lower border
+                        for (var vi = 8; vi <= 10; vi++)
+                        {
+                            var cursorY = yi + vi;
+
+                            if (cursorY >= source.height || ret.GetPixel(xi, cursorY).Equals(frameColor))
+                            {
+                                continue;
+                            }
+
+                            ret.pixels[ret.GetIndex(xi, cursorY) + 0] = borderColor.B;
+                            ret.pixels[ret.GetIndex(xi, cursorY) + 1] = borderColor.G;
+                            ret.pixels[ret.GetIndex(xi, cursorY) + 2] = borderColor.R;
+                            ret.pixels[ret.GetIndex(xi, cursorY) + 3] = 0xFF;
+                        }
+                    }
+
+                    if (source.GetPixel(xi, yi).Equals(verticalColor))
+                    {
+                        // left border
+                        for (var ui = -3; ui <= -1; ui++)
+                        {
+                            var cursorX = xi + ui;
+
+                            if (cursorX < 0 || ret.GetPixel(cursorX, yi).Equals(frameColor))
+                            {
+                                continue;
+                            }
+
+                            ret.pixels[ret.GetIndex(cursorX, yi) + 0] = borderColor.B;
+                            ret.pixels[ret.GetIndex(cursorX, yi) + 1] = borderColor.G;
+                            ret.pixels[ret.GetIndex(cursorX, yi) + 2] = borderColor.R;
+                            ret.pixels[ret.GetIndex(cursorX, yi) + 3] = 0xFF;
+                        }
+
+                        // within the border
+                        for (var ui = 0; ui <= 1; ui++)
+                        {
+                            var cursorX = xi + ui;
+
+                            if (cursorX < 0 || cursorX >= source.width)
+                            {
+                                continue;
+                            }
+
+                            ret.pixels[ret.GetIndex(cursorX, yi) + 0] = frameColor.B;
+                            ret.pixels[ret.GetIndex(cursorX, yi) + 1] = frameColor.G;
+                            ret.pixels[ret.GetIndex(cursorX, yi) + 2] = frameColor.R;
+                            ret.pixels[ret.GetIndex(cursorX, yi) + 3] = 0xFF;
+                        }
+
+                        // lower border
+                        for (var ui = 2; ui <= 4; ui++)
+                        {
+                            var cursorX = xi + ui;
+
+                            if (cursorX >= source.width || ret.GetPixel(cursorX, yi).Equals(frameColor))
+                            {
+                                continue;
+                            }
+
+                            ret.pixels[ret.GetIndex(cursorX, yi) + 0] = borderColor.B;
+                            ret.pixels[ret.GetIndex(cursorX, yi) + 1] = borderColor.G;
+                            ret.pixels[ret.GetIndex(cursorX, yi) + 2] = borderColor.R;
+                            ret.pixels[ret.GetIndex(cursorX, yi) + 3] = 0xFF;
+                        }
+                    }
+                }
+            }
+            return ret;
+        }
+
+        public void SetHorizontalColor(string color)
+        {
+            this.horizontalColor = new Pixel(color);
+        }
+
+        public void SetVerticalColor(string color)
+        {
+            this.verticalColor = new Pixel(color);
+        }
+
+        public void SetBorderColor(string color)
+        {
+            this.borderColor = new Pixel(color);
+        }
+
+        public void SetFrameColor(string color)
+        {
+            this.frameColor = new Pixel(color);
+        }
+
+        public void SetBackGroundColor(string color)
+        {
+            this.backGroundColor = new Pixel(color);
+        }
+    }
+
     public class ColorReplacer : ImageProcesser
     {
         private Pixel pixelFrom;

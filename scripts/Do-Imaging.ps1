@@ -17,7 +17,15 @@ param (
 
     [Parameter(Mandatory = $false)]
     [PSObject]
-    $Option3
+    $Option3,
+
+    [Parameter(Mandatory = $false)]
+    [PSObject]
+    $Option4,
+
+    [Parameter(Mandatory = $false)]
+    [PSObject]
+    $Option5
 )
 
 # Load C# files
@@ -35,14 +43,12 @@ $sourceImage = [System.Drawing.Image]::FromFile($resolvedFilePath)
 
 # Convert image to pixels
 $sourcePixels = [PSImaging.BitmapConverter]::ConvertBitmapToPixels($sourceImage)
-if ($sourceImage -ne $null)
-{
+if ($sourceImage -ne $null) {
     $sourceImage.Dispose()
 }
 
 # Process image
-switch ($ProcessingType)
-{
+switch ($ProcessingType) {
     'ConvertTo-Grayscale' {
         $imageProcesser = New-Object PSImaging.GrayScaleConverter
     }
@@ -59,6 +65,14 @@ switch ($ProcessingType)
         $imageProcesser.SetLevel([Int32]$Option1)
         $imageProcesser.SetDrawingColor([string]$Option2)
         $imageProcesser.SetBackGroundColor([string]$Option3)
+    }
+    'Draw-Frame' {
+        $imageProcesser = New-Object PSImaging.FrameDrawer
+        $imageProcesser.SetHorizontalColor([string]$Option1)
+        $imageProcesser.SetVerticalColor([string]$Option2)
+        $imageProcesser.SetBorderColor([string]$Option3)
+        $imageProcesser.SetFrameColor([string]$Option4)
+        $imageProcesser.SetBackGroundColor([string]$Option5)
     }
     'Replace-Color' {
         $imageProcesser = New-Object PSImaging.ColorReplacer
